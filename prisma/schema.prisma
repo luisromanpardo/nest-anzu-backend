@@ -1,0 +1,304 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model banlist_info {
+  card_id BigInt  @id
+  ban_ocg String? @db.VarChar(50)
+  cards   cards   @relation(fields: [card_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model card_banlist {
+  id       Int     @id @default(autoincrement())
+  card_id  BigInt?
+  ban_tcg  String? @db.VarChar(50)
+  ban_ocg  String? @db.VarChar(50)
+  ban_goat String? @db.VarChar(50)
+  cards    cards?  @relation(fields: [card_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model card_images {
+  card_id           BigInt?
+  image_url         String?
+  image_url_small   String?
+  image_url_cropped String?
+  image_id          Int     @id @default(autoincrement())
+  cards             cards?  @relation(fields: [card_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([card_id], map: "idx_card_images_card_id")
+}
+
+model card_prices {
+  id                 Int       @id @default(autoincrement())
+  card_id            BigInt?
+  cardmarket_price   Decimal?  @db.Decimal(10, 2)
+  tcgplayer_price    Decimal?  @db.Decimal(10, 2)
+  ebay_price         Decimal?  @db.Decimal(10, 2)
+  amazon_price       Decimal?  @db.Decimal(10, 2)
+  coolstuffinc_price Decimal?  @db.Decimal(10, 2)
+  updated_at         DateTime? @default(now()) @db.Timestamp(6)
+  cards              cards?    @relation(fields: [card_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([card_id], map: "idx_card_prices_card_id")
+}
+
+model card_printings {
+  printing_id     Int      @id @default(autoincrement())
+  card_id         BigInt
+  set_name        String   @db.VarChar(255)
+  set_code        String   @db.VarChar(50)
+  set_rarity      String?  @db.VarChar(100)
+  set_rarity_code String?  @db.VarChar(50)
+  set_price       Decimal? @default(0.00) @db.Decimal(10, 2)
+  cards           cards    @relation(fields: [card_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model card_sets {
+  id              Int      @id @default(autoincrement())
+  card_id         BigInt?
+  set_name        String   @db.VarChar(255)
+  set_code        String?  @db.VarChar(50)
+  set_rarity      String?  @db.VarChar(100)
+  set_rarity_code String?  @db.VarChar(20)
+  set_price       Decimal? @db.Decimal(10, 2)
+  cards           cards?   @relation(fields: [card_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([card_id], map: "idx_card_sets_card_id")
+}
+
+model card_typelines {
+  id       Int     @id @default(autoincrement())
+  card_id  BigInt?
+  typeline String  @db.VarChar(100)
+  cards    cards?  @relation(fields: [card_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model card_types {
+  card_id   BigInt
+  type_name String @db.VarChar(50)
+  cards     cards  @relation(fields: [card_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([card_id, type_name])
+}
+
+model cards {
+  id                       BigInt           @id
+  name                     String           @db.VarChar(255)
+  type                     String?          @db.VarChar(100)
+  human_readable_card_type String?          @db.VarChar(100)
+  frame_type               String?          @db.VarChar(50)
+  description              String?
+  race                     String?          @db.VarChar(100)
+  atk                      Int?
+  def                      Int?
+  level                    Int?
+  attribute                String?          @db.VarChar(50)
+  archetype                String?          @db.VarChar(100)
+  ygoprodeck_url           String?
+  banlist_info             banlist_info?
+  card_banlist             card_banlist[]
+  card_images              card_images[]
+  card_prices              card_prices[]
+  card_printings           card_printings[]
+  card_sets                card_sets[]
+  card_typelines           card_typelines[]
+  card_types               card_types[]
+  inventario               inventario[]
+  store_products           store_products?
+
+  @@index([archetype], map: "idx_cards_archetype")
+  @@index([name], map: "idx_cards_name")
+}
+
+model cart {
+  id         Int          @id @default(autoincrement())
+  user_id    Int          @unique @map("user_id")
+  created_at DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at DateTime?    @default(now()) @db.Timestamptz(6)
+  users      users        @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  cart_items cart_items[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model cart_items {
+  id             Int            @id @default(autoincrement())
+  cart_id        Int
+  product_id     Int
+  cantidad       Int
+  added_at       DateTime?      @default(now()) @db.Timestamptz(6)
+  cart           cart           @relation(fields: [cart_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  store_products store_products @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([cart_id, product_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model inventario {
+  inventario_id Int        @id @default(autoincrement())
+  vendedor_id   Int
+  card_id       BigInt
+  cantidad      Int        @default(1)
+  precio        Decimal?   @db.Decimal(10, 2)
+  condicion     String?    @default("Near Mint") @db.VarChar(50)
+  idioma        String?    @default("Inglés") @db.VarChar(20)
+  edicion       String?    @db.VarChar(20)
+  notas         String?
+  created_at    DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at    DateTime?  @default(now()) @db.Timestamp(6)
+
+  // ── Phase 1: link to users ─────────────────────────
+  user_id Int?
+  users   users?  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  cards      cards      @relation(fields: [card_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  vendedores vendedores @relation(fields: [vendedor_id], references: [vendedor_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([precio], map: "idx_inventario_precio")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model order_items {
+  id              Int     @id @default(autoincrement())
+  order_id        Int
+  product_id      Int
+  card_name       String
+  precio_snapshot Decimal @db.Decimal(10, 2)
+  cantidad        Int
+  orders          orders  @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([product_id], map: "idx_order_items_product_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model orders {
+  id          Int           @id @default(autoincrement())
+  user_id     Int
+  status      String        @default("pendiente")
+  pickup_code String        @unique @db.Char(6)
+  created_at  DateTime?     @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?     @default(now()) @db.Timestamptz(6)
+  order_items order_items[]
+  users       users         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([pickup_code], map: "idx_orders_pickup_code")
+  @@index([user_id], map: "idx_orders_user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model store_products {
+  id         Int          @id @default(autoincrement())
+  card_id    BigInt       @unique
+  precio     Decimal      @db.Decimal(10, 2)
+  stock      Int          @default(0)
+  activo     Boolean      @default(true)
+  created_at DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at DateTime?    @default(now()) @db.Timestamptz(6)
+  cart_items cart_items[]
+  cards      cards        @relation(fields: [card_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([activo], map: "idx_store_products_activo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model user_roles {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  role       String    @db.VarChar(20)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, role])
+  @@index([user_id], map: "idx_user_roles_user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id            Int          @id @default(autoincrement())
+  username      String       @unique @db.VarChar(50)
+  password_hash String
+  email         String       @unique @db.VarChar(100)
+  dni           String       @unique @db.VarChar(20)
+  user_type     String       @default("cliente") @db.VarChar(20)
+  is_active     Boolean      @default(true)
+  created_at    DateTime?    @default(now()) @db.Timestamp(6)
+  updated_at    DateTime?    @default(now()) @db.Timestamp(6)
+
+  // ── Phase 1 additions ────────────────────────────────
+  role       String   @default("user") @db.VarChar(20)
+  instagram  String?  @db.VarChar(100)
+  twitter    String?  @db.VarChar(100)
+  facebook   String?  @db.VarChar(150)
+  whatsapp   String?  @db.VarChar(20)
+  discord    String?  @db.VarChar(100)
+  konami_id  String?  @db.VarChar(50)
+  is_public  Boolean  @default(true)
+
+  cart          cart?
+  orders        orders[]
+  user_roles    user_roles[]
+  inventario    inventario[]
+  refresh_tokens refresh_tokens[]
+
+  @@index([email], map: "idx_users_email")
+  @@index([username], map: "idx_users_username")
+}
+
+model vendedores {
+  vendedor_id       Int          @id @default(autoincrement())
+  nombres           String       @db.VarChar(100)
+  apellidos         String       @db.VarChar(100)
+  correo            String       @unique @db.VarChar(150)
+  password_hash     String       @db.VarChar(255)
+  dni               String       @unique @db.VarChar(20)
+  konami_id         String?      @unique @db.VarChar(50)
+  whatsapp          String?      @db.VarChar(20)
+  instagram         String?      @db.VarChar(100)
+  facebook          String?      @db.VarChar(150)
+  otro              String?      @db.VarChar(255)
+  ultimo_login      DateTime?    @db.Timestamp(6)
+  intentos_fallidos Int?         @default(0)
+  bloqueado_hasta   DateTime?    @db.Timestamp(6)
+  created_at        DateTime?    @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?    @default(now()) @db.Timestamp(6)
+  activo            Boolean?     @default(true)
+  email_verificado  Boolean?     @default(false)
+  inventario        inventario[]
+
+  @@index([activo], map: "idx_vendedores_activo")
+  @@index([correo], map: "idx_vendedores_correo")
+  @@index([dni], map: "idx_vendedores_dni")
+  @@index([konami_id], map: "idx_vendedores_konami_id")
+}
+
+// ── Phase 1: Auth extensions ──────────────────────────────
+
+model refresh_tokens {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  token      String    @unique @db.Text
+  expires_at DateTime  @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  revoked    Boolean   @default(false)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "idx_refresh_tokens_user_id")
+  @@index([token], map: "idx_refresh_tokens_token")
+}
+
+model sync_log {
+  id             Int       @id @default(autoincrement())
+  synced_at      DateTime  @default(now()) @db.Timestamptz(6)
+  total_cards    Int?
+  cards_created  Int       @default(0)
+  cards_updated  Int       @default(0)
+  status         String    @default("success") @db.VarChar(20)
+  error_message  String?   @db.Text
+  duration_ms    Int?
+
+  @@index([synced_at(sort: Desc)], map: "idx_sync_log_synced_at")
+}
