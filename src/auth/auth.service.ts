@@ -53,9 +53,10 @@ export class AuthService {
         email,
         password_hash: passwordHash,
         dni: `tmp_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        user_type: 'cliente', // legacy field — required by schema but being phased out
         role: Role.USER,
         is_public: true,
-      } as any,
+      },
       select: {
         id: true,
         username: true,
@@ -68,7 +69,10 @@ export class AuthService {
 
     this.logger.log(`✅ Usuario registrado: ${username}`);
 
-    const [accessToken, refreshToken] = await this.generateTokens(user.id, user.role);
+    const [accessToken, refreshToken] = await this.generateTokens(
+      user.id,
+      user.role,
+    );
 
     return { user, accessToken, refreshToken };
   }
@@ -91,7 +95,10 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    const [accessToken, refreshToken] = await this.generateTokens(user.id, user.role);
+    const [accessToken, refreshToken] = await this.generateTokens(
+      user.id,
+      user.role,
+    );
 
     this.logger.log(`✅ Login exitoso: ${user.username}`);
 
@@ -150,7 +157,10 @@ export class AuthService {
       throw new UnauthorizedException('Usuario inactivo o no encontrado');
     }
 
-    const [accessToken, newRefreshToken] = await this.generateTokens(user.id, user.role);
+    const [accessToken, newRefreshToken] = await this.generateTokens(
+      user.id,
+      user.role,
+    );
 
     return { accessToken, refreshToken: newRefreshToken };
   }
@@ -180,7 +190,10 @@ export class AuthService {
     return user;
   }
 
-  private async generateTokens(userId: number, role: string): Promise<[string, string]> {
+  private async generateTokens(
+    userId: number,
+    role: string,
+  ): Promise<[string, string]> {
     const payload: TokenPayload = { sub: userId, role };
 
     const accessToken = this.jwtService.sign(payload);
