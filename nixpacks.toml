@@ -1,0 +1,6 @@
+[phases.setup]
+nixpkgsArchive = "nixos-24.05"
+
+[phases.build]
+phase = "nodejs"
+nodeVersion = "22"
