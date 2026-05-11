@@ -15,9 +15,15 @@ async function bootstrap() {
     }),
   );
 
-  // CORS
+  // CORS — permite localhost:5173 (Vite dev) y la URL de producción
+  const allowedOrigins = [
+    'http://localhost:5173', // Vite frontend local
+    'http://localhost:3001', // alternativa frontend local
+    process.env.FRONTEND_URL,
+  ].filter(Boolean);
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: allowedOrigins,
     credentials: true,
   });
 
@@ -26,9 +32,9 @@ async function bootstrap() {
 
   // Swagger
   const config = new DocumentBuilder()
-    .setTitle('Anzu - Yu-Gi-Oh! Card Inventory API')
+    .setTitle('Anzu - TCG Card Inventory API')
     .setDescription(
-      'API para gestión de inventarios compartidos de cartas Yu-Gi-Oh!',
+      'API para gestión de inventarios compartidos de cartas TCG',
     )
     .setVersion('1.0')
     .addBearerAuth()
