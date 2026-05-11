@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -15,6 +15,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { HomeModule } from './home/home.module';
 import { PublicModule } from './public/public.module';
 import { HealthModule } from './health/health.module';
+import { BigIntInterceptor } from './common/interceptors/bigint.interceptor';
 
 @Module({
   imports: [
@@ -50,6 +51,11 @@ import { HealthModule } from './health/health.module';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    // Serialize BigInt as string in all JSON responses
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: BigIntInterceptor,
     },
   ],
 })

@@ -27,7 +27,9 @@ async function bootstrap() {
   // Swagger
   const config = new DocumentBuilder()
     .setTitle('Anzu - Yu-Gi-Oh! Card Inventory API')
-    .setDescription('API para gestión de inventarios compartidos de cartas Yu-Gi-Oh!')
+    .setDescription(
+      'API para gestión de inventarios compartidos de cartas Yu-Gi-Oh!',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build();
